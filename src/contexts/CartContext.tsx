@@ -27,8 +27,8 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
         setCartItems(JSON.parse(storedCart));
       }
     } catch (error) {
-        console.error("Failed to parse cart items from localStorage", error);
-        localStorage.removeItem('cartItems');
+      console.error("Failed to parse cart items from localStorage", error);
+      localStorage.removeItem('cartItems');
     }
   }, []);
 
@@ -37,44 +37,72 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   }, [cartItems]);
 
   const addToCart = (product: Product, quantity: number) => {
+    let toastMessage: { title: string; description?: string; variant?: "default" | "destructive" } | null = null;
+
     setCartItems(prevItems => {
       const existingItem = prevItems.find(item => item.productId === product.id);
       if (quantity <= 0) return prevItems;
-      
+
       const quantityToAdd = Math.min(quantity, product.stock - (existingItem?.quantity || 0));
       if (quantityToAdd <= 0 && product.stock > 0) {
-         toast({ title: "Not enough stock", description: `Only ${product.stock - (existingItem?.quantity || 0)} more available.`, variant: "destructive" });
-         return prevItems;
-      }
-      if (product.stock === 0) {
-        toast({ title: "Out of stock", description: `${product.name} is currently out of stock.`, variant: "destructive" });
+        toastMessage = {
+          title: "Not enough stock",
+          description: `Only ${product.stock - (existingItem?.quantity || 0)} more available.`,
+          variant: "destructive",
+        };
         return prevItems;
       }
 
+      if (product.stock === 0) {
+        toastMessage = {
+          title: "Out of stock",
+          description: `${product.name} is currently out of stock.`,
+          variant: "destructive",
+        };
+        return prevItems;
+      }
 
       if (existingItem) {
         const newQuantity = existingItem.quantity + quantityToAdd;
         if (newQuantity > product.stock) {
-          toast({ title: "Not enough stock", description: `Cannot add ${quantityToAdd}. Max ${product.stock} available for ${product.name}.`, variant: "destructive" });
+          toastMessage = {
+            title: "Not enough stock",
+            description: `Cannot add ${quantityToAdd}. Max ${product.stock} available for ${product.name}.`,
+            variant: "destructive",
+          };
           return prevItems.map(item =>
             item.productId === product.id ? { ...item, quantity: product.stock } : item
           );
         }
-        toast({ title: "Item updated", description: `${product.name} quantity increased.` });
+        toastMessage = {
+          title: "Item updated",
+          description: `${product.name} quantity increased.`,
+        };
         return prevItems.map(item =>
           item.productId === product.id ? { ...item, quantity: newQuantity } : item
         );
       }
-      toast({ title: "Item added", description: `${product.name} added to cart.` });
-      return [...prevItems, { 
-        productId: product.id, 
-        name: product.name, 
-        price: product.price, 
-        quantity: quantityToAdd, 
-        imageUrl: product.imageUrl,
-        stock: product.stock 
-      }];
+
+      toastMessage = {
+        title: "Item added",
+        description: `${product.name} added to cart.`,
+      };
+      return [
+        ...prevItems,
+        {
+          productId: product.id,
+          name: product.name,
+          price: product.price,
+          quantity: quantityToAdd,
+          imageUrl: product.imageUrl,
+          stock: product.stock,
+        },
+      ];
     });
+
+    if (toastMessage) {
+      toast(toastMessage);
+    }
   };
 
   const removeFromCart = (productId: string) => {
@@ -83,26 +111,42 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const updateQuantity = (productId: string, quantity: number) => {
+    let toastMessage: { title: string; description?: string; variant?: "default" | "destructive" } | null = null;
+
     setCartItems(prevItems =>
       prevItems.map(item => {
         if (item.productId === productId) {
           if (quantity <= 0) {
-            // This case should ideally lead to removal, handled by a separate button or logic
-            // For now, prevent quantity from going below 1 or remove if 0
-            toast({ title: "Invalid quantity", description: "Quantity must be at least 1.", variant: "destructive" });
-            return item; // Or implement removal logic here
+            toastMessage = {
+              title: "Invalid quantity",
+              description: "Quantity must be at least 1.",
+              variant: "destructive",
+            };
+            return item;
           }
           if (quantity > item.stock) {
-            toast({ title: "Not enough stock", description: `Max ${item.stock} available for ${item.name}.`, variant: "destructive" });
+            toastMessage = {
+              title: "Not enough stock",
+              description: `Max ${item.stock} available for ${item.name}.`,
+              variant: "destructive",
+            };
             return { ...item, quantity: item.stock };
           }
+          toastMessage = {
+            title: "Quantity updated",
+            description: `${item.name} quantity changed.`,
+          };
           return { ...item, quantity };
         }
         return item;
-      }).filter(item => item.quantity > 0) // Remove item if quantity becomes 0
+      }).filter(item => item.quantity > 0)
     );
+
+    if (toastMessage) {
+      toast(toastMessage);
+    }
   };
-  
+
   const clearCart = () => {
     setCartItems([]);
     toast({ title: "Cart cleared", description: "All items removed from cart." });
