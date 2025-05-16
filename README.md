@@ -7,26 +7,45 @@ JWT-based authentication with SimpleJWT
 
 User registration, login, profile management, and order history
 
-Product and category management with admin capabilities
 
-Cart and order functionality with status tracking
 
-Real-time notifications using Django Channels and WebSockets
+Steps for setting up and running the project:
 
-Redis caching for improved performance
+1. Clone the Repository
+Clone the project and navigate into the directory:
+git clone https://github.com/DISH0310/E-Commerce-DRF-Real-Time.git
+cd E-Commerce-DRF-Real-Time
 
-Pagination and filtering for product listings
+2.Create and Activate a Virtual Environment
+Create a virtual environment and activate it:
+python -m venv env
+source env/bin/activate        # On Windows: env\Scripts\activate
 
-PostgreSQL as the primary database
+3. Install Dependencies
+Install all required Python packages:
+pip install -r requirements.txt
 
-Optimized queries using select_related and prefetch_related
+4. Configure PostgreSQL
+Create a PostgreSQL database and user.
 
-Python, Django, Django REST Framework
+5. Run Redis Server
+Ensure Redis is installed and running:
+redis-server
 
-PostgreSQL
+6. Run Migrations
+Apply migrations to set up the database schema:
+python manage.py makemigrations
+python manage.py migrate
 
-Redis
+7. Create a Superuser
+Create an admin user to access the Django admin panel:
+python manage.py createsuperuser
 
-Django Channels (ASGI, WebSocket support)
+8. Start the Development Server
+Start the Django development server:
+python manage.py runserver
 
-SimpleJWT for authentication
+The API will be accessible at:
+http://127.0.0.1:8000/api/
+
+9. (Optional) Enable WebSockets for Real-Time Notifications
